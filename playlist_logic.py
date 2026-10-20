@@ -1,3 +1,4 @@
+from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Tuple
 
 Song = Dict[str, object]
@@ -164,11 +165,21 @@ def search_songs(
         return songs
 
     q = query.lower().strip()
+    query_words = q.split()
     filtered: List[Song] = []
 
     for song in songs:
         value = str(song.get(field, "")).lower()
-        if value and value in q:
+        value_words = value.split()
+        partial_match = bool(q) and q in value
+        word_match = bool(query_words) and all(word in value for word in query_words)
+        fuzzy_match = any(
+            SequenceMatcher(None, word, artist_word).ratio() >= 0.8
+            for word in query_words
+            for artist_word in value_words
+        )
+
+        if value and (partial_match or word_match or fuzzy_match):
             filtered.append(song)
 
     return filtered
