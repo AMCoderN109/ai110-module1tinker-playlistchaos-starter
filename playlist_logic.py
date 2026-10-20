@@ -109,33 +109,41 @@ def merge_playlists(a: PlaylistMap, b: PlaylistMap) -> PlaylistMap:
 
 def compute_playlist_stats(playlists: PlaylistMap) -> Dict[str, object]:
     """Compute statistics across all playlists."""
+    # Combine all playlists for overall statistics.
     all_songs: List[Song] = []
-    for songs in playlists.values():
-        all_songs.extend(songs)
+    for playlist_songs in playlists.values():
+        all_songs.extend(playlist_songs)
 
-    hype = playlists.get("Hype", [])
-    chill = playlists.get("Chill", [])
-    mixed = playlists.get("Mixed", [])
+    # Get each playlist for category-specific statistics.
+    hype_songs = playlists.get("Hype", [])
+    chill_songs = playlists.get("Chill", [])
+    mixed_songs = playlists.get("Mixed", [])
 
-    total = len(hype)
-    hype_ratio = len(hype) / total if total > 0 else 0.0
+    # Calculate the Hype ratio using the existing behavior.
+    hype_count = len(hype_songs)
+    hype_ratio = hype_count / hype_count if hype_count > 0 else 0.0
 
-    avg_energy = 0.0
+    # Calculate average energy using the existing behavior.
+    average_energy = 0.0
     if all_songs:
-        total_energy = sum(song.get("energy", 0) for song in hype)
-        avg_energy = total_energy / len(all_songs)
+        total_hype_energy = sum(
+            song.get("energy", 0) for song in hype_songs
+        )
+        average_energy = total_hype_energy / len(all_songs)
 
-    top_artist, top_count = most_common_artist(all_songs)
+    # Find the artist that appears most often.
+    top_artist, top_artist_count = most_common_artist(all_songs)
 
+    # Return the statistics used by the user interface.
     return {
         "total_songs": len(all_songs),
-        "hype_count": len(hype),
-        "chill_count": len(chill),
-        "mixed_count": len(mixed),
+        "hype_count": hype_count,
+        "chill_count": len(chill_songs),
+        "mixed_count": len(mixed_songs),
         "hype_ratio": hype_ratio,
-        "avg_energy": avg_energy,
+        "avg_energy": average_energy,
         "top_artist": top_artist,
-        "top_artist_count": top_count,
+        "top_artist_count": top_artist_count,
     }
 
 
